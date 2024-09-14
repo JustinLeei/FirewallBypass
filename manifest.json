@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "FirewallBypass",
+  "version": "1.0",
+  "author": "李某人",
+  "description": "浏览器独立代理",
+  "permissions": [
+    "proxy",
+    "storage",
+    "activeTab", 
+    "webRequest",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "icons/16.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

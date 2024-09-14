@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>代理设置</title>
+</head>
+<body>
+  <!-- 主表格：设置边框分离、无间距、1px灰色边框、10px圆角，宽度100% -->
+<table style="border-collapse: separate; border-spacing: 0; border: 1px solid #ccc; border-radius: 10px; width: 100%;">
+    
+  <!-- 第一行：Enable Proxy 复选框 -->
+  <tr>
+    <td style="padding: 10px;">
+      <!-- 使用 inline-block 确保 label 内容在同一行 -->
+      <label style="display: inline-block;">
+        <!-- 复选框垂直居中对齐 -->
+        <input type="checkbox" id="enableProxy" style="vertical-align: middle;">
+        <!-- 文本垂直居中对齐 -->
+        <span style="vertical-align: middle;">Enable Proxy</span>
+      </label>
+    </td>
+  </tr>
+  
+  <!-- 第二行：Host 输入框 -->
+  <tr>
+    <td style="padding: 10px;">
+      <!-- 使用 flex 布局使 label 内容水平排列并垂直居中 -->
+      <label style="display: flex; align-items: center;">
+        <!-- 固定宽度为35px的 span 用于显示 "Host:" -->
+        <span style="flex: 0 0 35px;">Host:</span>
+        <!-- 输入框占据剩余空间，5px圆角，1px灰色边框，5px内边距 -->
+        <input type="text" id="proxyHost" style="flex: 1; border-radius: 5px; border: 1px solid #ccc; padding: 5px;">
+      </label>
+    </td>
+  </tr>
+  
+  <!-- 第三行：Port 输入框，样式与 Host 输入框相同 -->
+  <tr>
+    <td style="padding: 10px;">
+      <label style="display: flex; align-items: center;">
+        <span style="flex: 0 0 35px;">Port:</span>
+        <input type="number" id="proxyPort" style="flex: 1; border-radius: 5px; border: 1px solid #ccc; padding: 5px;">
+      </label>
+    </td>
+  </tr>
+  
+  <!-- 第四行：Save 按钮 -->
+  <tr>
+    <td style="padding: 10px; text-align: center;">
+      <!-- 按钮样式：5px圆角，内边距上下8px左右20px，绿色背景，白色文字，无边框，鼠标悬停时显示手型 -->
+      <button id="saveButton" style="border-radius: 5px; padding: 8px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">Save</button>
+    </td>
+  </tr>
+  
+</table>
+
+  <script src="popup.js"></script>
+</body>
+</html>
