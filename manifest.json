@@ -2,15 +2,14 @@
   "manifest_version": 3,
   "name": "FirewallBypass",
   "version": "1.0",
-  "author": "李某人",
-  "description": "浏览器独立代理",
+  "author": "justinlee",
+  "description": "A simple and lightweight browser proxy Chrome extension",
   "permissions": [
     "proxy",
     "storage",
     "activeTab", 
     "webRequest",
-    "tabs",
-    "system.proxy"
+    "tabs"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -22,7 +21,10 @@
     "default_popup": "popup.html"
   },
   "icons": {
-    "16": "icons/16.png"
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "64": "icons/64.png",
+    "128": "icons/128.png"
   },
   "content_scripts": [
     {
