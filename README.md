@@ -1,5 +1,5 @@
 # FirewallBypass Browser Proxy Extension
-[Chinese](./README.zh.md) | 英文
+[Chinese](./README.zh.md) | English
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Features](#features)
@@ -80,4 +80,4 @@ A: Add domains in the extension settings text box, supporting these formats:
 
 ## License
 
-MIT License 
+MIT License

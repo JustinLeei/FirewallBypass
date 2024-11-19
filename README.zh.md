@@ -1,6 +1,6 @@
 # FirewallBypass 浏览器代理插件
 
-[English](./README.en.md) | 简体中文
+[English](./README.md) | 简体中文
 
 ## 目录
 1. [简介](#简介)
