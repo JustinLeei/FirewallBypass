@@ -1,49 +1,83 @@
-# 浏览器插件代理配置教程
-## 目录
-1. [简介](#简介)
-2. [准备工作](#准备工作)
-3. [配置步骤](#配置步骤)
-4. [原理解释](#原理解释)
-5. [验证配置](#验证配置)
+# FirewallBypass Browser Proxy Extension
+[Chinese](./README.zh.md) | 英文
+## Table of Contents
+1. [Introduction](#introduction)
+2. [Features](#features)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Project Structure](#project-structure)
+6. [FAQ](#faq)
 
-## 简介
+## Introduction
 
-本教程旨在帮助用户通过局域网的方式配置并使用代理，来绕开网络限制，实现浏览器的独立代理配置，而不会影响系统代理。以下步骤将指导您如何通过本地代理访问网络，并使用浏览器插件实现独立的浏览器代理。
+This is a **lightweight proxy extension** for Chrome browser that automatically switches proxy settings based on predefined domain lists. The extension supports independent proxy configuration without affecting the system's global proxy settings.
 
-## 准备工作
+## Features
 
-1. 在一台能够绕过 GFW 的服务器上运行 V2Ray 镜像的客户端。
-2. V2Ray 服务地址示例：`http://192.168.83.231:12345`
-3. 确保能从本地计算机通过 SSH 连接到中间服务器。
-   - 中间服务器 IP 地址示例：`192.168.145.180`
-   - SSH 连接命令：`ssh iask@192.168.145.180`
+- Supports HTTP/HTTPS/SOCKS5 proxy protocols
+- Smart proxy routing based on domains
+- Built-in extensive preset proxy rules
+- Custom proxy domain addition/exclusion
+- Regular expression domain matching
+- Real-time proxy status display
+- Proxy rule search and view functionality
+- Clean user interface
 
-## 配置步骤
+## Installation
 
-1. 在本地计算机上运行浏览器插件，开启独立的浏览器代理。
+1. Clone or download this project
+2. Run `npm install` to install dependencies
+3. Open Chrome browser and navigate to `chrome://extensions/`
+4. Enable "Developer mode"
+5. Click "Load unpacked" and select the project directory
 
-2. 在本地计算机上运行以下命令设置 SSH 隧道：
-   ```
-   ssh -L 8080:192.168.83.231:12345 iask@192.168.145.180
-   ```
+## Usage
 
-## 原理解释
+1. Click the extension icon in the browser toolbar
+2. Configure proxy server information in the popup window:
+   - Proxy type (HTTP/HTTPS/SOCKS5)
+   - Server address
+   - Port number
+3. View and search the built-in proxy rules list
+4. Add custom proxy domain rules in the text box:
+   - Add proxy domain: `domain.com` or `*.domain.com`
+   - Exclude domain: `!domain.com` or `!*.domain.com`
+5. Click "Save" to apply settings
+6. When proxy is enabled, the extension will display current proxy status at the top of the page
 
-1. **SSH 隧道**：
-   - 在本地机器上创建一个到 SSH 服务器（192.168.145.180）的加密连接。
+### Interface Preview
 
-2. **本地端口转发**：
-   - 在本地机器上打开端口 8080。
-   - 当有数据发送到本地 8080 端口时，SSH 客户端通过加密的 SSH 连接将数据转发到 SSH 服务器（192.168.145.180）。
-   - SSH 服务器再将数据转发至 V2Ray 服务器（192.168.83.231）的 12345 端口。
-![image](https://github.com/user-attachments/assets/e0a48cf4-661d-4151-9915-6efa30821ffe)
+![Extension Popup](./images/popup.png)
+*Main configuration interface*
 
-## 验证配置
+![Proxy Status Display](./images/no-proxy-indicate.png)
+![Proxy Status Display](./images/proxy-indicate.png)
+*Proxy status indicator at the top of the page*
 
-确认端口 8080 是否正常监听，可以使用以下命令：
-```
-netstat -a -o -n | findstr :8080
-```
-该命令将显示 8080 端口的监听状态，确保 SSH 隧道已成功建立。
+## Project Structure
 
-通过上述步骤，您可以实现浏览器的独立代理配置，并且不会影响系统中的其他网络设置。
+- `manifest.json`: Extension configuration file
+- `popup.html/js`: Popup window interface
+- `background.js`: Background proxy control logic
+- `content.js`: Page proxy status display
+- `proxy-list.txt`: Preset proxy rules list
+- `package.json`: Project dependencies configuration
+
+## FAQ
+
+**Q: Why isn't the proxy working after configuration?**
+A: Please check:
+1. If proxy server address and port are correct
+2. If the extension is enabled
+3. If the accessed domain is in the proxy rules list
+
+**Q: How to add custom proxy rules?**
+A: Add domains in the extension settings text box, supporting these formats:
+- `domain.com`: Exact domain match
+- `*.domain.com`: Subdomain match
+- `!domain.com`: Domain exclusion
+- `regexp:pattern`: Regular expression match
+
+## License
+
+MIT License 

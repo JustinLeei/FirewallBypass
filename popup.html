@@ -1,57 +1,163 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>代理设置</title>
+  <title>Proxy Settings</title>
+  <style>
+    .github-link {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      text-decoration: none;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+    }
+    .github-icon {
+      width: 20px;
+      height: 20px;
+    }
+    .proxy-list-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+    }
+    .modal-content {
+      position: relative;
+      background: white;
+      margin: 10% auto;
+      padding: 20px;
+      width: 80%;
+      max-height: 70vh;
+      border-radius: 5px;
+      overflow-y: auto;
+    }
+    .close-modal {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+    .view-list-link {
+      color: #4CAF50;
+      text-decoration: underline;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+  </style>
 </head>
 <body>
-  <!-- 主表格：设置边框分离、无间距、1px灰色边框、10px圆角，宽度100% -->
-<table style="border-collapse: separate; border-spacing: 0; border: 1px solid #ccc; border-radius: 10px; width: 100%;">
+  <!-- GitHub link -->
+  <a href="https://github.com/justinleei/FirewallBypass" target="_blank" class="github-link">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMGMtNi42MjYgMC0xMiA1LjM3My0xMiAxMiAwIDUuMzAyIDMuNDM4IDkuOCA4LjIwNyAxMS4zODcuNi4xMTEuNzkzLS4yNjEuNzkzLS41Nzd2LTIuMjM0Yy0zLjMzOC43MjYtNC4wMzMtMS40MTYtNC4wMzMtMS40MTYtLjU0Ni0xLjM4Ny0xLjMzMy0xLjc1Ni0xLjMzMy0xLjc1Ni0xLjA4OS0uNzQ1LjA4My0uNzI5LjA4My0uNzI5IDEuMjA1LjA4NCAxLjgzOSAxLjIzNyAxLjgzOSAxLjIzNyAxLjA3IDEuODM0IDIuODA3IDEuMzA0IDMuNDkyLjk5Ny4xMDctLjc3NS40MTgtMS4zMDUuNzYyLTEuNjA0LTIuNjY1LS4zMDUtNS40NjctMS4zMzQtNS40NjctNS45MyAwLTEuMzEuNDY1LTIuMzggMS4yMzUtMy4yMi0uMTM1LS4zMDMtLjU0LTEuNTIzLjEwNS0zLjE3NiAwIDAgMS4wMDUtLjMyMiAzLjMgMS4yMy45Ni0uMjY3IDEuOTgtLjM5OSAzLS40MDUgMS4wMi4wMDYgMi4wNC4xMzggMyAuNDA1IDIuMjgtMS41NTIgMy4yODUtMS4yMyAzLjI4NS0xLjIzLjY0NSAxLjY1My4yNCAyLjg3My4xMiAzLjE3Ni43NjUuODQgMS4yMyAxLjkxIDEuMjMgMy4yMiAwIDQuNjEtMi44MDUgNS42MjUtNS40NzUgNS45Mi40Mi4zNi44MSAxLjA5Ni44MSAyLjIydjMuMjljMCAuMzEuMTkyLjY5NC44MDEuNTc2IDQuNzY1LTEuNTg5IDguMTk5LTYuMDg2IDguMTk5LTExLjM4NiAwLTYuNjI3LTUuMzczLTEyLTEyLTEyeiIvPjwvc3ZnPg==" 
+         alt="GitHub" class="github-icon">
+    View on GitHub
+  </a>
+
+  <!-- Main table -->
+  <table style="border-collapse: separate; border-spacing: 0; border: 1px solid #ccc; border-radius: 10px; width: 100%; margin-top: 40px;">
+    <tr>
+      <td style="padding: 10px;">
+        <label style="display: flex; align-items: center;">
+          <input type="checkbox" id="useSystemProxy" style="margin-right: 5px;">
+          <span>Use System Proxy Settings</span>
+          <span class="view-list-link" id="viewProxyList">View Proxy List</span>
+        </label>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding: 10px;">
+        <label style="display: flex; align-items: center;">
+          <span style="flex: 0 0 35px;">Type:</span>
+          <select id="proxyType" style="flex: 1; border-radius: 5px; border: 1px solid #ccc; padding: 5px;">
+            <option value="http">HTTP</option>
+            <option value="https">HTTPS</option>
+            <option value="socks5">SOCKS5</option>
+          </select>
+        </label>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding: 10px;">
+        <label style="display: flex; align-items: center;">
+          <span style="flex: 0 0 35px;">Host:</span>
+          <input type="text" id="proxyHost" style="flex: 1; border-radius: 5px; border: 1px solid #ccc; padding: 5px;">
+        </label>
+      </td>
+    </tr>
     
-  <!-- 第一行：Enable Proxy 复选框 -->
-  <tr>
-    <td style="padding: 10px;">
-      <!-- 使用 inline-block 确保 label 内容在同一行 -->
-      <label style="display: inline-block;">
-        <!-- 复选框垂直居中对齐 -->
-        <input type="checkbox" id="enableProxy" style="vertical-align: middle;">
-        <!-- 文本垂直居中对齐 -->
-        <span style="vertical-align: middle;">Enable Proxy</span>
-      </label>
-    </td>
-  </tr>
-  
-  <!-- 第二行：Host 输入框 -->
-  <tr>
-    <td style="padding: 10px;">
-      <!-- 使用 flex 布局使 label 内容水平排列并垂直居中 -->
-      <label style="display: flex; align-items: center;">
-        <!-- 固定宽度为35px的 span 用于显示 "Host:" -->
-        <span style="flex: 0 0 35px;">Host:</span>
-        <!-- 输入框占据剩余空间，5px圆角，1px灰色边框，5px内边距 -->
-        <input type="text" id="proxyHost" style="flex: 1; border-radius: 5px; border: 1px solid #ccc; padding: 5px;">
-      </label>
-    </td>
-  </tr>
-  
-  <!-- 第三行：Port 输入框，样式与 Host 输入框相同 -->
-  <tr>
-    <td style="padding: 10px;">
-      <label style="display: flex; align-items: center;">
-        <span style="flex: 0 0 35px;">Port:</span>
-        <input type="number" id="proxyPort" style="flex: 1; border-radius: 5px; border: 1px solid #ccc; padding: 5px;">
-      </label>
-    </td>
-  </tr>
-  
-  <!-- 第四行：Save 按钮 -->
-  <tr>
-    <td style="padding: 10px; text-align: center;">
-      <!-- 按钮样式：5px圆角，内边距上下8px左右20px，绿色背景，白色文字，无边框，鼠标悬停时显示手型 -->
-      <button id="saveButton" style="border-radius: 5px; padding: 8px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">Save</button>
-    </td>
-  </tr>
-  
-</table>
+    <tr>
+      <td style="padding: 10px;">
+        <label style="display: flex; align-items: center;">
+          <span style="flex: 0 0 35px;">Port:</span>
+          <input type="number" id="proxyPort" style="flex: 1; border-radius: 5px; border: 1px solid #ccc; padding: 5px;">
+        </label>
+      </td>
+    </tr>
+    
+    <tr>
+      <td style="padding: 10px;">
+        <label style="display: block; margin-bottom: 5px;">Additional Proxy Domains (one domain per line, supports * wildcard):</label>
+        <textarea id="proxyDomains" style="width: 100%; height: 100px; border-radius: 5px; border: 1px solid #ccc; padding: 5px;" 
+          placeholder="Examples:
+Add domain:     *.example.com
+                specific-domain.com
+Exclude domain: !*.google.com
+                !facebook.com"></textarea>
+      </td>
+    </tr>
+    
+    <tr>
+      <td style="padding: 10px; text-align: center;">
+        <button id="saveButton" style="border-radius: 5px; padding: 8px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">Save</button>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Proxy List Modal -->
+  <div id="proxyListModal" class="proxy-list-modal">
+    <div class="modal-content">
+      <span class="close-modal" id="closeModal">&times;</span>
+      <h2>Proxy List</h2>
+      
+      <!-- Add search box -->
+      <div style="margin-bottom: 15px;">
+        <input type="text" 
+               id="searchBox" 
+               placeholder="Search domains..." 
+               style="width: 100%; 
+                      padding: 8px; 
+                      border: 1px solid #ccc; 
+                      border-radius: 4px; 
+                      box-sizing: border-box;">
+      </div>
+      
+      <!-- Add count display -->
+      <div id="resultCount" 
+           style="margin-bottom: 10px; 
+                  font-size: 14px; 
+                  color: #666;">
+      </div>
+
+      <pre id="proxyListContent" 
+           style="white-space: pre-wrap; 
+                  word-wrap: break-word;
+                  max-height: 60vh;
+                  overflow-y: auto;
+                  background: #f5f5f5;
+                  padding: 10px;
+                  border-radius: 4px;"></pre>
+    </div>
+  </div>
 
   <script src="popup.js"></script>
 </body>
