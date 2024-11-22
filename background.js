@@ -3,16 +3,24 @@ chrome.runtime.onInstalled.addListener(() => {
     proxyHost: 'localhost', 
     proxyPort: '8080',
     useSystemProxy: false,
-    proxyDomains: ''
+    proxyDomains: '',
+    proxyType: 'http'
   });
 });
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (changes.useSystemProxy || changes.proxyHost || changes.proxyPort || changes.proxyDomains) {
-    chrome.storage.local.get(['useSystemProxy', 'proxyHost', 'proxyPort', 'proxyDomains'], (data) => {
-      updateProxy(data);
-      updateAllTabs(data.useSystemProxy);
-    });
+  if (changes.useSystemProxy || 
+      changes.proxyHost || 
+      changes.proxyPort || 
+      changes.proxyDomains ||
+      changes.proxyType) {
+    chrome.storage.local.get(
+      ['useSystemProxy', 'proxyHost', 'proxyPort', 'proxyDomains', 'proxyType'],
+      (data) => {
+        updateProxy(data);
+        updateAllTabs(data.useSystemProxy);
+      }
+    );
   }
 });
 
@@ -33,15 +41,28 @@ function convertToMatchPattern(domain) {
   domain = domain.trim();
   if (!domain) return null;
   
-  // Remove protocol if present
+  // 保存代理类型前缀
+  let prefix = '';
+  if (domain.startsWith('socks5://')) {
+    prefix = 'socks5://';
+    domain = domain.slice(8);
+  } else if (domain.startsWith('http://')) {
+    prefix = 'http://';
+    domain = domain.slice(7);
+  } else if (domain.startsWith('https://')) {
+    prefix = 'https://';
+    domain = domain.slice(8);
+  }
+  
+  // Remove protocol if present (除了已处理的特殊前缀)
   domain = domain.replace(/^https?:\/\//, '');
   
   // Handle wildcards
   if (domain.startsWith('*.')) {
-    return '*.' + domain.slice(2);
+    return prefix + '*.' + domain.slice(2);
   }
   
-  return domain;
+  return prefix + domain;
 }
 
 function isMatchingDomain(host, pattern) {
@@ -71,7 +92,14 @@ function isMatchingDomain(host, pattern) {
 }
 
 async function updateProxy(data) {
-  const { useSystemProxy, proxyHost, proxyPort } = data;
+  const { useSystemProxy, proxyHost, proxyPort, proxyType } = data;
+
+  console.log('[Proxy Debug] Current settings:', {
+    useSystemProxy,
+    proxyHost,
+    proxyPort,
+    proxyType,
+  });
 
   if (!useSystemProxy) {
     console.log('[Proxy] Disabled - clearing settings');
@@ -85,116 +113,58 @@ async function updateProxy(data) {
     return;
   }
 
-  console.log('[Proxy] Enabled - configuring settings');
-  console.log('[Proxy] Using host:', proxyHost, 'port:', proxyPort);
-
   // Load domains from proxy-list.txt
   const proxyListDomains = await loadProxyList();
-  
-  // Get user-defined domains and split into include/exclude lists
   const userDomains = data.proxyDomains
     .split('\n')
     .map(line => line.trim())
     .filter(line => line.length > 0);
 
-  const includeDomains = userDomains
-    .filter(domain => !domain.startsWith('!'))
-    .map(convertToMatchPattern)
-    .filter(Boolean);
-
-  const excludeDomains = userDomains
-    .filter(domain => domain.startsWith('!'))
-    .map(domain => convertToMatchPattern(domain.slice(1)))
-    .filter(Boolean);
-
-  // Filter out excluded domains from the proxy list
-  const filteredProxyList = proxyListDomains
-    .filter(domain => {
-      const pattern = convertToMatchPattern(domain);
-      return !excludeDomains.some(excludePattern => {
-        if (excludePattern.startsWith('*.')) {
-          const suffix = excludePattern.slice(2);
-          return pattern.endsWith(suffix) || pattern === suffix;
-        }
-        return pattern === excludePattern;
-      });
-    })
-    .map(convertToMatchPattern)
-    .filter(Boolean);
-
-  // Combine filtered proxy list with include domains
-  const allDomains = [...filteredProxyList, ...includeDomains];
-
-  // Configure proxy settings
-  chrome.proxy.settings.set({
+  // 配置代理设置
+  const config = {
     value: {
       mode: "pac_script",
       pacScript: {
         data: `
-          function isMatchingDomain(host, pattern) {
-            // Handle regexp patterns
-            if (pattern.startsWith('regexp:')) {
-              const regexStr = pattern.slice(7);
-              try {
-                const regex = new RegExp(regexStr);
-                return regex.test(host);
-              } catch (e) {
-                console.error('Invalid regex pattern:', pattern, e);
-                return false;
-              }
-            }
-            
-            // Handle wildcard patterns
-            if (pattern.startsWith('*.')) {
-              const suffix = pattern.slice(2);
-              return host === suffix || host.endsWith('.' + suffix);
-            }
-            
-            // Handle exact domain matches (including subdomains)
-            return host === pattern || host.endsWith('.' + pattern);
-          }
-
           function FindProxyForURL(url, host) {
-            // List of domains that should use proxy
-            var proxyDomains = ${JSON.stringify(allDomains)};
+            var domains = ${JSON.stringify([...proxyListDomains, ...userDomains.filter(d => !d.startsWith('!'))])};
+            var cleanHost = host.replace(/^www\./, '');
             
-            // 获取URL的协议
-            var scheme = url.split(':')[0].toLowerCase();
+            console.log('[PAC Debug] Checking host:', host, 'cleaned:', cleanHost);
             
-            // Check if the host matches any proxy domain
-            for (var i = 0; i < proxyDomains.length; i++) {
-              if (isMatchingDomain(host, proxyDomains[i])) {
-                // 根据不同协议返回对应的代理字符串
-                if (scheme === 'http') {
-                  return 'PROXY ${proxyHost}:${proxyPort}';
-                } else if (scheme === 'https') {
-                  return 'HTTPS ${proxyHost}:${proxyPort}';
-                } else {
-                  return 'SOCKS5 ${proxyHost}:${proxyPort}';
-                }
+            for (var i = 0; i < domains.length; i++) {
+              var pattern = domains[i];
+              pattern = pattern.replace(/^www\./, '');
+              
+              if (cleanHost === pattern || cleanHost.endsWith('.' + pattern)) {
+                console.log('[PAC Debug] Match found! Pattern:', pattern);
+                return '${data.proxyType.toUpperCase()} ${proxyHost}:${proxyPort}';
               }
             }
             
-            return 'SYSTEM';
+            console.log('[PAC Debug] No match found, using DIRECT');
+            return 'DIRECT';
           }
         `
       }
     },
     scope: "regular"
-  }, () => {
+  };
+
+  // 应用代理设置
+  chrome.proxy.settings.set(config, () => {
     if (chrome.runtime.lastError) {
       console.error('[Proxy Error]', chrome.runtime.lastError);
     } else {
       console.log('[Proxy] Settings applied successfully');
+      console.log('[Proxy] Active configuration:', config);
     }
   });
 
-  // Log the current proxy configuration
-  console.log('[Proxy Config] Total patterns:', allDomains.length);
-  console.log('[Proxy Config] Proxy patterns:', allDomains);
-  if (excludeDomains.length > 0) {
-    console.log('[Proxy Config] Excluded patterns:', excludeDomains);
-  }
+  // 获取当前的代理设置以验证
+  chrome.proxy.settings.get({}, (details) => {
+    console.log('[Proxy] Current settings:', details);
+  });
 }
 
 function updateAllTabs(useSystemProxy) {
