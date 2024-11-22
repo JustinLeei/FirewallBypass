@@ -94,11 +94,12 @@ function isMatchingDomain(host, pattern) {
 async function updateProxy(data) {
   const { useSystemProxy, proxyHost, proxyPort, proxyType } = data;
 
-  console.log('[Proxy Debug] Current settings:', {
+  console.log('[Proxy Debug] Detailed settings:', {
     useSystemProxy,
     proxyHost,
     proxyPort,
     proxyType,
+    proxyUrl: `${proxyType}://${proxyHost}:${proxyPort}`
   });
 
   if (!useSystemProxy) {
@@ -113,39 +114,23 @@ async function updateProxy(data) {
     return;
   }
 
-  // Load domains from proxy-list.txt
   const proxyListDomains = await loadProxyList();
   const userDomains = data.proxyDomains
     .split('\n')
     .map(line => line.trim())
     .filter(line => line.length > 0);
 
-  // 配置代理设置
+  // 修改配置以更好地处理 HTTPS
   const config = {
     value: {
-      mode: "pac_script",
-      pacScript: {
-        data: `
-          function FindProxyForURL(url, host) {
-            var domains = ${JSON.stringify([...proxyListDomains, ...userDomains.filter(d => !d.startsWith('!'))])};
-            var cleanHost = host.replace(/^www\./, '');
-            
-            console.log('[PAC Debug] Checking host:', host, 'cleaned:', cleanHost);
-            
-            for (var i = 0; i < domains.length; i++) {
-              var pattern = domains[i];
-              pattern = pattern.replace(/^www\./, '');
-              
-              if (cleanHost === pattern || cleanHost.endsWith('.' + pattern)) {
-                console.log('[PAC Debug] Match found! Pattern:', pattern);
-                return '${data.proxyType.toUpperCase()} ${proxyHost}:${proxyPort}';
-              }
-            }
-            
-            console.log('[PAC Debug] No match found, using DIRECT');
-            return 'DIRECT';
-          }
-        `
+      mode: "fixed_servers",  // 改用 fixed_servers 模式
+      rules: {
+        singleProxy: {
+          scheme: proxyType,  // 使用用户选择的代理类型
+          host: proxyHost,
+          port: parseInt(proxyPort)
+        },
+        bypassList: [] // 可以在这里添加不需要代理的域名
       }
     },
     scope: "regular"
@@ -256,4 +241,32 @@ chrome.webRequest.onBeforeRequest.addListener(
   },
   {urls: ["<all_urls>"]},
   []
+);
+
+// 添加代理错误监听器
+chrome.proxy.onProxyError.addListener((details) => {
+  console.error('[Proxy Error] Details:', details);
+});
+
+// 修改请求监听器，添加更多错误处理
+chrome.webRequest.onCompleted.addListener(
+  (details) => {
+    if (details.error) {
+      console.error(`[Request Error] ${details.url}: ${details.error}`);
+    }
+  },
+  {urls: ["<all_urls>"]},
+  []
+);
+
+chrome.webRequest.onErrorOccurred.addListener(
+  (details) => {
+    console.error(`[Request Failed] ${details.url}:`, {
+      error: details.error,
+      timeStamp: details.timeStamp,
+      tabId: details.tabId,
+      type: details.type
+    });
+  },
+  {urls: ["<all_urls>"]}
 );
